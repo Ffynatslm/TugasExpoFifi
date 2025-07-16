@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { View, Image, Pressable, StyleSheet, Dimensions, ScrollView, Text } from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
+const imageBaseSize = (screenWidth - 260) / 3; // 3 kolom
 
-const generateCustomImagePairs = () => {
-  const mainImages = [
+// GAMBAR KUSTOM SAYA
+const generateImagePairs = () => {
+  const main = [
     'https://i.pinimg.com/1200x/f2/33/5a/f2335a8af43eb226ec6d00fe1266b350.jpg',
     'https://i.pinimg.com/1200x/e1/01/91/e10191fdcdb9ebe13d22aa2622f88cc5.jpg',
     'https://i.pinimg.com/736x/8c/ac/3f/8cac3fa71dabf2515d15166843b805ce.jpg',
@@ -16,7 +18,7 @@ const generateCustomImagePairs = () => {
     'https://i.pinimg.com/736x/55/2e/eb/552eebeb8af18a7f5b05aa5701f79bee.jpg',
   ];
 
-  const altImages = [
+  const alt = [
     'https://i.pinimg.com/736x/bd/66/94/bd6694b312091fa4333aa90e089fb55a.jpg',
     'https://i.pinimg.com/736x/d5/24/3a/d5243a0a5a2bc8a602feb76c5e032d31.jpg',
     'https://i.pinimg.com/736x/c4/09/21/c40921b147d2ce0646ec0c876243f5dd.jpg',
@@ -28,70 +30,58 @@ const generateCustomImagePairs = () => {
     'https://i.pinimg.com/736x/aa/1c/9f/aa1c9fc297898338996fe0dea3c58c27.jpg',
   ];
 
-  return mainImages.map((mainImage, idx) => ({
+  return main.map((mainImage, i) => ({
     mainImage,
-    altImage: altImages[idx],
+    altImage: alt[i],
   }));
 };
 
-const imagePairs = generateCustomImagePairs();
+const imagePairs = generateImagePairs();
 
 export default function GridGambarCustom() {
   const [imageStates, setImageStates] = useState(
     imagePairs.map(() => ({ zoom: 1, showAlt: false }))
   );
 
-  const handlePressImage = (idx: number) => {
+  const handlePress = (index: number) => {
     setImageStates((prev) =>
-      prev.map((item, i) => {
-        if (i !== idx) return item;
-        const nextZoom = item.zoom < 2 ? item.zoom * 1.2 : 2;
+      prev.map((img, i) => {
+        if (i !== index) return img;
+
+        const nextZoom = img.zoom >= 2 ? 1 : img.zoom + 0.2;
+
         return {
           zoom: nextZoom,
-          showAlt: !item.showAlt,
+          showAlt: !img.showAlt,
         };
       })
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Profil Section */}
-      <View style={styles.profileSection}>
+    <ScrollView style={styles.wrapper}>
+      {/* Profil Pengguna */}
+      <View style={styles.profileContainer}>
         <View style={styles.triangle} />
-
-        <View style={styles.nameContainer}>
-          <Text style={styles.nameText}>Fifiyana</Text>
-        </View>
-
-        <View style={styles.nimContainer}>
-          <Text style={styles.nimText}>105841104522</Text>
-        </View>
-
+        <View style={styles.nameBox}><Text style={styles.nameText}>Fifiyana</Text></View>
+        <View style={styles.nimBox}><Text style={styles.nimText}>105841104522</Text></View>
         <View style={styles.circle} />
       </View>
 
       {/* Grid Gambar */}
-      <View style={styles.containerGrid}>
+      <View style={styles.grid}>
         {imagePairs.map((pair, idx) => {
-          const zoom = imageStates[idx].zoom;
-          const margin = 9 > 1 ? 2 : 3; 
-
+          const { zoom, showAlt } = imageStates[idx];
           return (
-            <Pressable key={idx} onPress={() => handlePressImage(idx)}>
+            <Pressable key={idx} onPress={() => handlePress(idx)}>
               <Image
-                source={{ uri: imageStates[idx].showAlt ? pair.altImage : pair.mainImage }}
-                style={{
-                  width: (screenWidth - margin * 32) / 3,
-                  height: (screenWidth - margin * 32) / 3,
-                  margin: margin,
-                  transform: [{ scale: zoom }],
-                  borderRadius: 8,
-                  resizeMode: 'cover',
-                  backgroundColor: '#eee',
-                  borderWidth: 1,
-                  borderColor: '#bbb',
-                }}
+                source={{ uri: showAlt ? pair.altImage : pair.mainImage }}
+                style={[
+                  styles.image,
+                  {
+                    transform: [{ scale: zoom }],
+                  },
+                ]}
               />
             </Pressable>
           );
@@ -102,15 +92,12 @@ export default function GridGambarCustom() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  profileSection: {
+  wrapper: { flex: 1, backgroundColor: '#f8f8f8' },
+
+  profileContainer: {
     alignItems: 'center',
-    paddingVertical: 30,
-    backgroundColor: '#f9f9f9',
-    marginBottom: 10,
+    paddingVertical: 20,
+    backgroundColor: '#fff',
   },
   triangle: {
     width: 0,
@@ -118,45 +105,57 @@ const styles = StyleSheet.create({
     borderLeftWidth: 30,
     borderRightWidth: 30,
     borderBottomWidth: 50,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderBottomColor: "orange",
-    marginBottom: 20,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'orange',
+    marginBottom: 15,
   },
-  nameContainer: {
-    backgroundColor: "grey",
-    borderRadius: 5,
+  nameBox: {
+    backgroundColor: '#333',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    borderRadius: 6,
     marginBottom: 10,
   },
   nameText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
   },
-  nimContainer: {
-    backgroundColor: "pink",
-    borderRadius: 50,
-    paddingHorizontal: 30,
-    paddingVertical: 8,
-    marginBottom: 20,
+  nimBox: {
+    backgroundColor: 'pink',
+    paddingHorizontal: 25,
+    paddingVertical: 6,
+    borderRadius: 25,
+    marginBottom: 15,
   },
   nimText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "black",
+    color: '#000',
+    fontWeight: '600',
   },
   circle: {
     width: 60,
     height: 60,
-    backgroundColor: "cyan",
+    backgroundColor: 'cyan',
     borderRadius: 30,
+    marginBottom: 10,
   },
-  containerGrid: {
+
+  grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    paddingBottom: 20,
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  image: {
+    width: imageBaseSize,
+    height: imageBaseSize,
+    marginBottom: 12,
+    borderRadius: 10,
+    resizeMode: 'cover',
+    backgroundColor: '#eee',
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
 });
