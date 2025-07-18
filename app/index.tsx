@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { View, Image, Pressable, StyleSheet, Dimensions, ScrollView, Text } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  View,
+  Image,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  Text,
+  Animated,
+} from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
-const imageBaseSize = (screenWidth - 260) / 3; // 3 kolom
+const imageBaseSize = (screenWidth - 260) / 3;
 
-// GAMBAR KUSTOM SAYA
 const generateImagePairs = () => {
   const main = [
     'https://i.pinimg.com/1200x/f2/33/5a/f2335a8af43eb226ec6d00fe1266b350.jpg',
@@ -40,19 +48,29 @@ const imagePairs = generateImagePairs();
 
 export default function GridGambarCustom() {
   const [imageStates, setImageStates] = useState(
-    imagePairs.map(() => ({ zoom: 1, showAlt: false }))
+    imagePairs.map(() => ({ showAlt: false, zoomLevel: 1 }))
   );
+
+  const zoomAnimRefs = useRef(imagePairs.map(() => new Animated.Value(1))).current;
 
   const handlePress = (index: number) => {
     setImageStates((prev) =>
-      prev.map((img, i) => {
-        if (i !== index) return img;
+      prev.map((item, i) => {
+        if (i !== index) return item;
 
-        const nextZoom = img.zoom >= 2 ? 1 : img.zoom + 0.2;
+        let newZoom = item.zoomLevel + 0.2;
+        if (newZoom > 2) newZoom = 1;
+
+        // Animate zoom
+        Animated.timing(zoomAnimRefs[i], {
+          toValue: newZoom,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
 
         return {
-          zoom: nextZoom,
-          showAlt: !img.showAlt,
+          zoomLevel: newZoom,
+          showAlt: !item.showAlt,
         };
       })
     );
@@ -71,16 +89,19 @@ export default function GridGambarCustom() {
       {/* Grid Gambar */}
       <View style={styles.grid}>
         {imagePairs.map((pair, idx) => {
-          const { zoom, showAlt } = imageStates[idx];
+          const { showAlt, zoomLevel } = imageStates[idx];
+          const zoomStyle = {
+            transform: [{ scale: zoomAnimRefs[idx] }],
+          };
+
           return (
             <Pressable key={idx} onPress={() => handlePress(idx)}>
-              <Image
+              <Animated.Image
                 source={{ uri: showAlt ? pair.altImage : pair.mainImage }}
                 style={[
                   styles.image,
-                  {
-                    transform: [{ scale: zoom }],
-                  },
+                  zoomStyle,
+                  zoomLevel > 1 && styles.activeBorder,
                 ]}
               />
             </Pressable>
@@ -145,17 +166,21 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     padding: 16,
   },
   image: {
     width: imageBaseSize,
     height: imageBaseSize,
-    marginBottom: 12,
+    margin: 8,
     borderRadius: 10,
     resizeMode: 'cover',
     backgroundColor: '#eee',
     borderWidth: 1,
     borderColor: '#ccc',
+  },
+  activeBorder: {
+    borderColor: 'orange',
+    borderWidth: 2,
   },
 });
